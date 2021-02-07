@@ -1,0 +1,5 @@
+RMA_list_path=
+RMA_list_name=
+ITS_report_path=
+SBF_report_path=
+UNVISUALABLE_OF_EXCLE=1
