@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 import pyocr
 
-pyocr.tesseract.TESSERACT_CMD = 'C:\Program Files (x86)\Tesseract-OCR\\tesseract.exe'
+pyocr.tesseract.TESSERACT_CMD = 'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe'
 # pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files (x86)\Tesseract-OCR\\tesseract.exe'
 # SHOW_PHOTO = False
 SHOW_PHOTO = True
@@ -14,7 +14,7 @@ tool = tools[0]
 norm_size_x = 960
 norm_size_y = 1280
 # im = Image.open('0002.jpg')
-im = cv.imread('0001.jpg') #读取图片
+im = cv.imread('0002.jpg') #读取图片
 if SHOW_PHOTO:
     im_res = cv.resize(im, (norm_size_x, norm_size_y))
     cv.imshow('im_res', im_res)
@@ -32,32 +32,33 @@ if SHOW_PHOTO:
     cv.imshow('im_gray_brignt_res',im_gray_bright_res)
 print(im_gray_bright.shape)
 
+
+'''
 retval, im_gray_bright_bit = cv.threshold(im_gray_bright, 127, 255, cv.THRESH_BINARY) 
 if SHOW_PHOTO:
     im_gray_bright_bit_res = cv.resize(im_gray_bright_bit, (norm_size_x, norm_size_y))
     cv.imshow('im_gray_bright_bit_res',im_gray_bright_bit_res)
 print(im_gray_bright_bit.shape)
 
+
 # tmp = np.hstack((im_res, im_gray_res, im_gray_bright_res, im_gray_bright_bit_res))
 # cv.imshow('image', tmp)
+img = im_gray_bright_bit
 
-imgInfo = im_gray_bright_bit.shape
-height = imgInfo[0]
-width = imgInfo[1]
-gray = cv.cvtColor(im_gray_bright_bit, cv.COLOR_BGR2GRAY)
-dst = np.zeros((height, width, 1), np.uint8)
+
+height,width=img.shape
+dst1=np.zeros((height,width,1),np.uint8)
 for i in range(height):
     for j in range(width):
-        grayPixel = 255 - gray[i, j]
-        dst[i, j] = grayPixel
+        dst1[i,j]=255-img[i,j]
 
 if SHOW_PHOTO:
-    dst_res = cv.resize(dst, (norm_size_x, norm_size_y))
-    cv.imshow("dst_res", dst_res)
+    dst1_res = cv.resize(dst1, (norm_size_x, norm_size_y))
+    cv.imshow("dst1_res", dst1_res)
 
 # 形态学计算，开操作1
 kernel1 = cv.getStructuringElement(cv.MORPH_RECT, (4, 3))
-res_open1 = cv.morphologyEx(dst, cv.MORPH_OPEN, kernel1)
+res_open1 = cv.morphologyEx(dst1, cv.MORPH_OPEN, kernel1)
 if SHOW_PHOTO:
     res_open1_res = cv.resize(res_open1, (norm_size_x, norm_size_y))
     cv.imshow("res_open1_res", res_open1_res)
@@ -76,22 +77,24 @@ if SHOW_PHOTO:
     res_close1_res = cv.resize(res_close1, (norm_size_x, norm_size_y))
     cv.imshow("res_close1_res", res_close1_res)
 
-# exit()
-# #二值化图像传入图像和阈值
-# def erzhihua(image,threshold):
-#     ''':type image:Image.Image'''
-#     image=image.convert('L')
-#     table=[]
-#     for i in range(256):
-#         if i < threshold:
-#             table.append(0)
-#         else:
-#             table.append(1)
-#     return image.point(table,'1')
-# image = erzhihua(im, 127)
-# # image.show()
-result1 = tool.image_to_string(Image.fromarray(im_gray_bright_bit), lang='jpn+eng', builder=pyocr.builders.TextBuilder(tesseract_layout=11))
-result2 = tool.image_to_string(Image.fromarray(im_gray_bright_bit), lang='jpn+eng', builder=pyocr.builders.WordBoxBuilder(tesseract_layout=6))
+img = res_close1
+
+height,width=img.shape
+dst2=np.zeros((height,width,1),np.uint8)
+for i in range(height):
+    for j in range(width):
+        dst2[i,j]=255-img[i,j]
+
+
+if SHOW_PHOTO:
+    dst2_res = cv.resize(dst2, (norm_size_x, norm_size_y))
+    cv.imshow("dst2_res", dst2_res)
+
+img2 = dst2
+'''
+
+result1 = tool.image_to_string(Image.fromarray(im_gray_bright), lang='jpn+eng', builder=pyocr.builders.TextBuilder(tesseract_layout=11))
+result2 = tool.image_to_string(Image.fromarray(im_gray_bright), lang='jpn+eng', builder=pyocr.builders.WordBoxBuilder(tesseract_layout=6))
 print(result1)
 # print(result2)
 # cv.imwrite('output.jpg',image)
@@ -106,3 +109,4 @@ if SHOW_PHOTO:
     im_out_res = cv.resize(im_out, (norm_size_x, norm_size_y))
     cv.imshow('im_out_res',im_out_res)
     cv.waitKey(0)
+
