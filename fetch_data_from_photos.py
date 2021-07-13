@@ -1,3 +1,5 @@
+# importing the libraries
+#coding: UTF-8
 import cv2 as cv
 import os
 import glob
@@ -68,42 +70,47 @@ elif judge_paras=="2":
     print("Escで窓口を閉じ、次に進んでください。")
     print("--------------------------------")
     print("")
-    print("抽出するデータ種類の数を入力ください。1,2,3...")
+    print("抽出するデータ種類の数を入力ください。1~5")
     NUM_OF_ROI = int(input(">"))
-    STORAGE_R = [0 for x in range(0,NUM_OF_ROI*4)]
-    path = os.getcwd()
-    regEx = '*'
-    all_jpg_path_name = glob.glob(path +'\\'+ regEx +'.jpg', recursive=True)
-    one_jpg_path_name = all_jpg_path_name[0]
-    if os.path.exists(one_jpg_path_name):
-        for i in range(1, NUM_OF_ROI+1):
-            # print("Please select the zone!")
-            src = cv.imread(one_jpg_path_name)
-            src = cv.resize(src, dsize=None, fx=0.5,fy=0.5)
-            # print("鼠标选择ROI,然后点击 enter键")
-            r = cv.selectROI('input', src, False)  # ,返回 (x_min, y_min, w, h)
-            # print("ROI",r)
-            # roi区域
-            roi = src[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
+    if NUM_OF_ROI>1:
+        STORAGE_R = [0 for x in range(0,NUM_OF_ROI*4)]
+        path = os.getcwd()
+        regEx = '*'
+        all_jpg_path_name = glob.glob(path +'\\'+ regEx +'.jpg', recursive=True)
+        one_jpg_path_name = all_jpg_path_name[0]
+        if os.path.exists(one_jpg_path_name):
+            for i in range(1, NUM_OF_ROI+1):
+                # print("Please select the zone!")
+                src = cv.imdecode(np.fromfile(one_jpg_path_name, dtype=np.uint8), -1)
+                # src = cv.imread(one_jpg_path_name)
+                src = cv.resize(src, dsize=None, fx=0.5,fy=0.5)
+                # print("鼠标选择ROI,然后点击 enter键")
+                r = cv.selectROI('input', src, False)  # ,返回 (x_min, y_min, w, h)
+                # print("ROI",r)
+                # roi区域
+                roi = src[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
 
-            # print("ROI",roi)
-            k = cv.waitKey(0) & 0xFF
-            if k == 27: # 按esc 键即可退出
-                cv.destroyAllWindows()
-            for j in range(4):
-                index =(i-1)*4+j
-                STORAGE_R[index]= int(r[j])
-                # print("((i-1)*4+j)=%d"%((i-1)*4+j))
-                # print("j=%d"%j)
-    f1 = open('paras_for_OCR.txt','w')
-    f1.write("NUM_OF_ROI=")
-    f1.write(str(NUM_OF_ROI))
-    f1.write('\n')
-    f1.write("STORAGE_R=")
-    f1.write(str(STORAGE_R))
-    # fi.write()
-    f1.close() 
-    # exit()
+                # print("ROI",roi)
+                k = cv.waitKey(0) & 0xFF
+                if k == 27: # 按esc 键即可退出
+                    cv.destroyAllWindows()
+                for j in range(4):
+                    index =(i-1)*4+j
+                    STORAGE_R[index]= int(r[j])
+                    # print("((i-1)*4+j)=%d"%((i-1)*4+j))
+                    # print("j=%d"%j)
+        f1 = open('paras_for_OCR.txt','w')
+        f1.write("NUM_OF_ROI=")
+        f1.write(str(NUM_OF_ROI))
+        f1.write('\n')
+        f1.write("STORAGE_R=")
+        f1.write(str(STORAGE_R))
+        # fi.write()
+        f1.close() 
+        # exit()
+    else:
+        print("1~5を入力する必要があります。")
+        exit()
 else:
     print("正しく入力されていません。")
     exit()
@@ -125,8 +132,8 @@ if os.path.exists(one_jpg_path_name):
         for k in range(NUM_OF_ROI):
             if  jpg_path_name == one_jpg_path_name:
                 names['x%s'%k] = []
-            # print(image)
-            im = cv.imread(jpg_path_name) #读取图片
+            im = cv.imdecode(np.fromfile(jpg_path_name, dtype=np.uint8), -1)
+            # im = cv.imread((jpg_path_name)) #读取图片
             im = im[STORAGE_R[1+k*4]*2:(STORAGE_R[1+k*4]+STORAGE_R[3+k*4])*2,STORAGE_R[0+k*4]*2:(STORAGE_R[0+k*4]+STORAGE_R[2+k*4])*2]
             # im = im[int(r[1])*2:int(r[1]+r[3])*2, int(r[0])*2:int(r[0]+r[2])*2]
             # print('-----------------')
@@ -171,8 +178,6 @@ if os.path.exists(one_jpg_path_name):
             if SHOW_PHOTO:
                 dst1_res = cv.resize(dst1, dsize=None,fx=1,fy=1)
                 cv.imshow("dst1_res", dst1_res)
-
-
             # 形态学计算，开操作1
             kernel1 = cv.getStructuringElement(cv.MORPH_RECT, (4, 3))
             res_open1 = cv.morphologyEx(dst1, cv.MORPH_OPEN, kernel1)
@@ -195,7 +200,6 @@ if os.path.exists(one_jpg_path_name):
                 cv.imshow("res_close1_res", res_close1_res)
         
             img = res_close1
-
             height,width=img.shape
             dst2=np.zeros((height,width,1),np.uint8)
             for i in range(height):
@@ -234,26 +238,69 @@ if os.path.exists(one_jpg_path_name):
             # result1.replace('\\n', ',',flags=4)
             print("データ %d  "%k,end="")
             # print(" %d"%k)
-
-            tmp_1 = re.search('(\w\w-\d\d\d\d\d)', result1) #去掉换行符, flags=re.DOTALL   
-            if tmp_1 != None:
-            # if len(tmp_1):
-                print(tmp_1.group(1))
-                names['x%s'%k].append(str(tmp_1.group(1)))
-                # print(x0)
-
-            tmp_2 = re.search('(\d\d\d\d\d\d\d-\d)', result1) 
-            # print(tmp_2)
-            if tmp_2 != None:
-                print(tmp_2.group(1))
-                names['x%s'%k].append(str(tmp_2.group(1)))
-                # print(x1)
+            if k == 0 :
+                tmp_1 = re.search('(\w\w-\d\d\d\d\d)', result1) #去掉换行符, flags=re.DOTALL   
+                if tmp_1 != None:
+                # if len(tmp_1):
+                    print(tmp_1.group(1))
+                    names['x%s'%k].append(str(tmp_1.group(1)))
+                    # print(x0)
+            if k == 1:
+                tmp_2 = re.search('(\d\d\d\d\d\d\d-\d)', result1) 
+                # print(tmp_2)
+                if tmp_2 != None:
+                    print(tmp_2.group(1))
+                    names['x%s'%k].append(str(tmp_2.group(1)))
+                else:
+                    print("-")
+                    names['x%s'%k].append("-")
+                    # print(x1)
+            if k == 2:
+                tmp_3 = re.search('(abc)', result1, flags=re.DOTALL) 
+                # print(tmp_2)
+                if tmp_3 != None:
+                    print(tmp_3.group(1))
+                    names['x%s'%k].append(str(tmp_3.group(1)))
+                else:
+                    print("-")
+                    names['x%s'%k].append("-")
+                    # print(x1)
+            if k == 3:
+                tmp_4 = re.search('(abc)', result1) 
+                # print(tmp_2)
+                if tmp_4 != None:
+                    print(tmp_4.group(1))
+                    names['x%s'%k].append(str(tmp_4.group(1)))
+                else:
+                    print("-")
+                    names['x%s'%k].append("-")
+                    # print(x1)
+            if k == 4:
+                tmp_5 = re.search('(abc)', result1) 
+                # print(tmp_2)
+                if tmp_5 != None:
+                    print(tmp_5.group(1))
+                    names['x%s'%k].append(str(tmp_5.group(1)))
+                else:
+                    print("-")
+                    names['x%s'%k].append("-")
+                    # print(x1)
 
             
         counts += 1
     # print(x0)
     # print(x1)
-    df = pd.DataFrame({'x0':x0, 'x1':x1})
+    if NUM_OF_ROI==1:
+        df = pd.DataFrame({'x0':x0})
+    if NUM_OF_ROI==2:
+        df = pd.DataFrame({'x0':x0, 'x1':x1})
+    if NUM_OF_ROI==3:
+        df = pd.DataFrame({'x0':x0, 'x1':x1, 'x2':x2})
+    if NUM_OF_ROI==4:
+        df = pd.DataFrame({'x0':x0, 'x1':x1,'x2':x2, 'x3':x3})
+    if NUM_OF_ROI==5:
+        df = pd.DataFrame({'x0':x0, 'x1':x1,'x2':x2, 'x3':x3,'x4':x4})
+
 
     # df = pd.DataFrame(x1)
     print("")
