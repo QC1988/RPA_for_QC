@@ -1,0 +1,67 @@
+Option Explicit
+Sub cpoy_cells_visible()
+Dim rgSrc As Range
+Dim rgDes As Range
+Dim rg As Range, rgPt As Range
+Dim strSrcAdd() As String
+Dim lCnt As Long, i As Long, j As Long, x As Long, y As Long
+
+On Error GoTo ExitPoint
+Set rgSrc = Application.InputBox("コピーするセル範囲を選択する", "提示", , , , , , 8)
+If rgSrc.Columns.Count > rgSrc.Parent.UsedRange.Columns.Count Then
+Set rgSrc = rgSrc.Parent.Range(rgSrc.Item(1, 1), rgSrc.Item(rgSrc.Rows.Count, rgSrc.Parent.UsedRange.Columns.Count))
+End If
+
+If rgSrc.Rows.Count > rgSrc.Parent.UsedRange.Rows.Count Then
+Set rgSrc = rgSrc.Parent.Range(rgSrc.Item(1, 1), rgSrc.Item(rgSrc.Parent.UsedRange.Rows.Count, rgSrc.Columns.Count))
+End If
+
+Set rgDes = Application.InputBox("ペストするセル範囲を選択する", "提示", , , , , , 8)
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Set rgPt = rgDes.Cells(1, 1)
+
+ReDim strSrcAdd(0)
+For Each rg In rgSrc
+If Not (rg.Height = 0 Or rg.Width = 0) Then
+ReDim Preserve strSrcAdd(UBound(strSrcAdd) + 1)
+strSrcAdd(UBound(strSrcAdd)) = rg.Address
+End If
+
+Next rg
+lCnt = 0
+For Each rg In rgSrc.Parent.Range((rgSrc.Rows(1).Address))
+If rg.Width <> 0 Then
+lCnt = lCnt + 1
+End If
+Next
+strSrcAdd(0) = lCnt
+i = 0
+j = 0
+x = 0
+y = 0
+For lCnt = 1 To UBound(strSrcAdd)
+lp: If ((lCnt - 1) \ strSrcAdd(0)) + i > x Then
+j = 0
+End If
+
+
+x = ((lCnt - 1) \ strSrcAdd(0)) + i
+y = ((lCnt - 1) Mod strSrcAdd(0)) + j
+Set rg = rgPt.Offset(x, y)
+If rg.Width = 0 Then
+j = j + 1
+GoTo lp
+ElseIf rg.Height = 0 Then
+i = i + 1
+j = 0
+GoTo lp
+Else
+rg.Value = rgSrc.Parent.Range(strSrcAdd(lCnt))
+End If
+Next lCnt
+rgDes.Parent.Activate
+ExitPoint:
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+End Sub
